@@ -1,9 +1,14 @@
 ; Multiply v1.1. SPDR ASM v1.0. 21-03-20. Andrew Hunter.
 
+; Initialize memory values.
 ; We can assume 0 will be in the accumalator as the computer has just been reset.
+reset:
 	str product
 	lod base
 	str count
+
+; Calculate the multiplication.
+; Run until the counter reaches 0, at that point the result will be in "product".
 loop:
 	lod count
 	sbi 1
@@ -13,15 +18,20 @@ loop:
 	add multiple
 	str product 
 	jmp loop
+
+; Output the results and halt.
 end:
-count:
-; The progam will store "count" in this byte but it will count down to "out" by the time it is reached. 
+
+; The progam will store the counter in this byte but it will have count down past 0 to 255 or "out" by the time it is reached. 
 ; This is done to keep the program within the 16 byte limit.
+count:
 	out
 	hlt
-product:
+
+; Variables (excluding count).
+product:	; The result.
 	#0
-base:
+base:		; The first input.
 	#0
-multiple:
+multiple:	; The second input.
 	#0
