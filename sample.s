@@ -1,11 +1,16 @@
 
 x = 255
 
-reset:
-	ldi 123
+	ldi 66
+	add data ; lol asdff
+
+	lsh
+
+loop:
+	lod data
 	add x
 	out
-	jmp reset
+	jmp loop
 	hlt
 
 data:

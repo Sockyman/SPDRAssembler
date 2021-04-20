@@ -1,7 +1,7 @@
 /* SPDR Assembler.
  * Andrew Hunter
  * 2021-03-20
- * v1.0
+ * v1.1
 */
 
 #include <iostream>
@@ -13,27 +13,35 @@
 #include <bitset>
 
 
-typedef std::vector<std::string> string_list;
 typedef std::map<std::string, int> const_map;
 
-const string_list instructions
+struct Instruction
 {
-	"hlt",
-	"lod",
-	"ldi",
-	"str",
-	"add",
-	"adi",
-	"sub",
-	"sbi",
-	"cmp",
-	"lsh",
-	"jmp",
-	"jpz",
-	"jnz",
-	"jpc",
-	"jnc",
-	"out"
+	std::string name;
+	int size;
+};
+
+typedef std::vector<std::string> string_list;
+
+const int instruction_count = 16;
+const Instruction instructions[]
+{
+	{ "hlt", 1 },
+	{ "lod", 2 },
+	{ "ldi", 2 },
+	{ "str", 2 },
+	{ "add", 2 },
+	{ "adi", 2 },
+	{ "sub", 2 },
+	{ "sbi", 2 },
+	{ "cmp", 2 },
+	{ "lsh", 1 },
+	{ "jmp", 2 },
+	{ "jpz", 2 },
+	{ "jnz", 2 },
+	{ "jpc", 2 },
+	{ "jnc", 2 },
+	{ "out", 1 }
 };
 
 constexpr int max_recomended_size = 128;
@@ -135,9 +143,9 @@ string_list get_lines(std::ifstream* file)
 
 int get_instruction_id(std::string input)
 {
-	for (int i{0}; i < instructions.size(); ++i)
+	for (int i{0}; i < instruction_count; ++i)
 	{
-		if (input == instructions[i])
+		if (input == instructions[i].name)
 		{
 			return i;
 		}
@@ -206,10 +214,12 @@ const_map get_constants(string_list lines)
 		else if (lines[i].find('=') < 1000000)
 			const_type = 2;
 
+		std::string name;
+		stream >> name;
+
 		if (const_type > 0)
 		{
-			std::string name;
-			stream >> name;
+			
 
 			int value{};
 			if (const_type == 1)
@@ -228,7 +238,13 @@ const_map get_constants(string_list lines)
 			constants[name] = value;
 		}
 		else
-			++bytes;
+		{
+			int ins_id = get_instruction_id(name);
+			if (ins_id >= 0)
+			{
+				bytes += instructions[ins_id].size;
+			}
+		}
 	}
 	return constants;
 }
@@ -294,15 +310,21 @@ std::vector<char> assemble(std::ifstream* file, bool print)
 
 std::string line_as_string(int line_number, char value, std::string instruction)
 {
+	std::stringstream ss{};
+
+	ss << line_number;
+	ss << ": ";
+
+	ss << std::bitset<4>(line_number).to_string();
+	ss << ":  ";
+	ss << std::bitset<4>(value >> 4).to_string();
+	ss << " ";
+	ss << std::bitset<4>(value & 0b1111).to_string();
+	ss << " ;  ";
+	ss << instruction;
+	ss << "\n";
 	std::string s{};
-	s += std::bitset<4>(line_number).to_string();
-	s += ":  ";
-	s += std::bitset<4>(value >> 4).to_string();
-	s += " ";
-	s += std::bitset<4>(value & 0b1111).to_string();
-	s += " ;  ";
-	s += instruction;
-	s += "\n";
+	std::getline(ss, s, (char)0);
 	return s;
 }
 
